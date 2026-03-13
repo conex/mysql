@@ -12,12 +12,12 @@ import (
 
 var (
 	// Image to use for the box.
-	Image = "mysql:latest"
+	Image = "mysql:8"
 	// Port used for connect to MySQL.
 	Port = "3306"
 
-	// MySQLUpWaitTime dictates how long we should wait for post MySQL to accept connections on {{Port}}.
-	MySQLUpWaitTime = 15 * time.Second
+	// MySQLUpWaitTime dictates how long we should wait for MySQL to accept connections on {{Port}}.
+	MySQLUpWaitTime = 30 * time.Second
 )
 
 func init() {
@@ -57,7 +57,7 @@ func (c *Config) env() []string {
 	}
 
 	if c.User == "root" && c.Password == "" {
-		env = append(env, fmt.Sprintf("MYSQL_ALLOW_EMPTY_PASSWORD=yes"))
+		env = append(env, "MYSQL_ALLOW_EMPTY_PASSWORD=yes")
 	} else {
 		env = append(env, fmt.Sprintf("MYSQL_PASSWORD=%s", c.Password))
 	}
@@ -74,14 +74,20 @@ func (c *Config) env() []string {
 	dbName := c.Database
 	if dbName == "" {
 		dbName = "test"
+		c.Database = dbName
 	}
 	env = append(env, fmt.Sprintf("MYSQL_DATABASE=%s", dbName))
 
 	return env
 }
 
-// Box returns a MySQL client.
+// Box returns a MySQL client and the container running the MySQL server.
+// It will call t.Fatal on errors.
 func Box(t testing.TB, config *Config) (*sql.DB, conex.Container) {
+	if config == nil {
+		config = &Config{}
+	}
+
 	c := conex.Box(t, &conex.Config{
 		Image:  Image,
 		Env:    config.env(),
@@ -91,13 +97,13 @@ func Box(t testing.TB, config *Config) (*sql.DB, conex.Container) {
 	config.host = c.Address()
 	config.port = Port
 
-	t.Logf("Waiting for MySQL to accept connections")
+	t.Log("Waiting for MySQL to accept connections")
 
 	err := c.Wait(Port, MySQLUpWaitTime)
 
 	if err != nil {
 		c.Drop()
-		t.Fatal("MySQL failed to start.", err)
+		t.Fatal("MySQL failed to start:", err)
 	}
 
 	t.Log("MySQL is now accepting connections")
