@@ -97,7 +97,7 @@ func Box(t testing.TB, config *Config) (*sql.DB, conex.Container) {
 	config.host = c.Address()
 	config.port = Port
 
-	t.Log("Waiting for MySQL to accept connections")
+	conex.Logf(t, "mysql", "Waiting for MySQL to accept connections")
 
 	err := c.Wait(Port, MySQLUpWaitTime)
 
@@ -106,7 +106,7 @@ func Box(t testing.TB, config *Config) (*sql.DB, conex.Container) {
 		t.Fatal("MySQL failed to start:", err)
 	}
 
-	t.Log("MySQL is now accepting connections")
+	conex.Logf(t, "mysql", "MySQL is now accepting connections")
 	db, err := sql.Open("mysql", config.url())
 
 	if err != nil {
