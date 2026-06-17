@@ -3,10 +3,10 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/omeid/conex"
 )
 
@@ -84,6 +84,10 @@ func (c *Config) env() []string {
 // Box returns a MySQL client and the container running the MySQL server.
 // It will call t.Fatal on errors.
 func Box(t testing.TB, config *Config) (*sql.DB, conex.Container) {
+	if !slices.Contains(sql.Drivers(), "mysql") {
+		t.Fatal("No SQL driver registered for mysql. Did you forget to import one? (e.g., _ \"github.com/go-sql-driver/mysql\")")
+	}
+
 	if config == nil {
 		config = &Config{}
 	}

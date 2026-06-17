@@ -4,8 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/omeid/conex"
 	"github.com/conex/mysql"
+	"github.com/omeid/conex"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func TestMain(m *testing.M) {
